@@ -1,4 +1,5 @@
-from .models import User
+from .models import User, Comment, Post
+from .validators import validate_content, validate_title
 from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,3 +25,22 @@ class UserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.save()
         return instance
+    
+
+class CommentSerializer(serializers.ModelSerializer):
+    pass
+
+
+class PostSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'author', 'title', 'content', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_data(self, data):
+        if not validate_title(data['title']):
+            raise serializers.ValidationError({'title': 'title must have at least 5 characters'})
+        if not validate_content(data['content']):
+            raise serializers.ValidationError({'content': 'content must have at least 20 characters'})
